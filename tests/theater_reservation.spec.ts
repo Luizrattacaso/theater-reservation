@@ -5,7 +5,7 @@ const data = {
     movie: 'Digger',
     hourSection: '14:00',
     row: 'O',
-    seats: [10, 11, 12],
+    seats: [7, 9, 11],
     date: '03/10',
 }
 
@@ -25,24 +25,29 @@ const rowLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 
 
 async function pickSession(page: Page, date: string, hourSection: string, movieName: string): Promise<void> {
     await page.getByText(`${date}`).click();
-    await page.locator(`#digger a:has-text("${hourSection}")`).click();
+    await page.locator(`a, button`).filter({ hasText: hourSection }).first().click();
 }
 
 test('Selection of movie and seats', async ({ page }) => {
     await page.goto(baseUrl);
     await pickSession(page, data.date, data.hourSection, data.movie);
 
-    const quantityOfRows = await page.locator('.sc-3912aed0-4.cbUPRA').count();
-    const bottonRowIndex = rowLetters.indexOf(quantityOfRows);
-    const targetAlphabeticalIndex = rowLetters.indexOf(data.row.toUpperCase());
-    const targetRowIndex = bottonRowIndex - targetAlphabeticalIndex -1;
+    const allRows = page.locator('.sc-3912aed0-4.cbUPRA > div');
+    const quantityOfRows = await allRows.count();
 
-    const row = page.locator('.sc-3912aed0-4.cbUPRA').nth(targetRowIndex);
+    const firstRowLabel = await allRows.first().locator('xpath=..').locator('div, span').filter({ hasText: /^[A-Z]$/ }).first().textContent().catch(() => null);
+    const topRowLetter = (firstRowLabel || 'Q').trim().toUpperCase();
+    const topIndex = rowLetters.indexOf(topRowLetter);
+    const targetAlphabeticalIndex = rowLetters.indexOf(data.row.toUpperCase());
     
+    const targetRowIndex = topIndex - targetAlphabeticalIndex;
+    const row = allRows.nth(targetRowIndex);
     const seatElements = row.locator('div[status], div[type]');
 
     for (const index of data.seats) {
         const seat = seatElements.nth(index);
+        
+        await seat.waitFor({ state: 'visible', timeout: 5000 });
         const classAttr = await seat.getAttribute('class') || '';
 
         const isDisabled = classAttr.includes('disabled');
