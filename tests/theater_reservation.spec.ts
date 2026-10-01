@@ -4,7 +4,8 @@ const data = {
     quantityOfTickets: 3,
     movie: 'Digger',
     hourSection: '14:00',
-    specificIndices: [10, 11, 12],
+    row: 'O',
+    seats: [10, 11, 12],
     date: '03/10',
 }
 
@@ -16,10 +17,11 @@ const enum theaterLocation {
 
 const movieSessionDetails = {
     city: 'recife',
-    theather: theaterLocation.DELUX
+    theater: theaterLocation.DELUX
 }
 
-const baseUrl = `https://www.ingresso.com/cinema/${movieSessionDetails.theather}?city=${movieSessionDetails.city}`;
+const baseUrl = `https://www.ingresso.com/cinema/${movieSessionDetails.theater}?city=${movieSessionDetails.city}`;
+const rowLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
 
 async function pickSession(page: Page, date: string, hourSection: string, movieName: string): Promise<void> {
     await page.getByText(`${date}`).click();
@@ -30,12 +32,16 @@ test('Selection of movie and seats', async ({ page }) => {
     await page.goto(baseUrl);
     await pickSession(page, data.date, data.hourSection, data.movie);
 
-    const targetRowIndex = 0; // 0 = Linha Q, 1 = Linha P, etc.
+    const quantityOfRows = await page.locator('.sc-3912aed0-4.cbUPRA').count();
+    const bottonRowIndex = rowLetters.indexOf(quantityOfRows);
+    const targetAlphabeticalIndex = rowLetters.indexOf(data.row.toUpperCase());
+    const targetRowIndex = bottonRowIndex - targetAlphabeticalIndex -1;
+
     const row = page.locator('.sc-3912aed0-4.cbUPRA').nth(targetRowIndex);
     
     const seatElements = row.locator('div[status], div[type]');
 
-    for (const index of data.specificIndices) {
+    for (const index of data.seats) {
         const seat = seatElements.nth(index);
         const classAttr = await seat.getAttribute('class') || '';
 
