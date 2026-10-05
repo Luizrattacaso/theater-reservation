@@ -2,10 +2,10 @@ import { test, expect, type Page } from '@playwright/test';
 
 const data = {
     quantityOfTickets: 3,
-    movie: 'Digger',
-    hourSection: '13:35',
-    row: 'O',
-    seats: [10, 11, 12],
+    movie: 'Coração Selvagem',
+    hourSection: '21:50',
+    row: 'E',
+    seats: [9,8,10],
     date: '07/10',
 }
 
@@ -22,10 +22,20 @@ const movieSessionDetails = {
 
 const baseUrl = `https://www.ingresso.com/cinema/${movieSessionDetails.theater}?city=${movieSessionDetails.city}`;
 
+async function formatMovieNameForId(movieName: string): Promise<string> {
+    return movieName
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '-');
+}
+
 async function pickSession(page: Page, date: string, hourSection: string, movieName: string): Promise<void> {
     await page.getByText(`${date}`).click();
-    await page.locator(`#digger a:has-text("${hourSection}")`).click();
+    await page.locator(`#${await formatMovieNameForId(movieName)} a:has-text("${hourSection}")`).click();
 }
+
 
 test('Selection of movie and seats', async ({ page }) => {
     await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
