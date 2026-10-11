@@ -1,19 +1,20 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test } from '@playwright/test';
 import { theaterLocation } from './aux_funtions/theaterLocation';
 import { theaterSessionLayout } from './aux_funtions/theaterSessionLayout';
 import { pickSession } from './aux_funtions/pickSession';
 
 const data = {
-    movie: 'Coração Selvagem',
-    hourSection: '21:50',
+    movie: 'Se Eu Fosse Você 3',
+    hourSection: '19:30',
     row: 'E',
     seats: [9,8,10],
-    date: '07/10',
+    date: '14/10',
 }
 
 const movieSessionDetails = {
     city: 'recife',
-    theater: theaterLocation.DELUX
+    theater: theaterLocation.DELUX,
+    rowLabel: theaterSessionLayout.rowLabel.IMAX,
 }
 
 const baseUrl = `https://www.ingresso.com/cinema/${movieSessionDetails.theater}?city=${movieSessionDetails.city}`;
@@ -22,14 +23,14 @@ test('Selection of movie and seats', async ({ page }) => {
     await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
     await pickSession(page, data.date, data.hourSection, data.movie);
 
-    const seatMapContainer = page.locator(theaterSessionLayout.IMAX.mainContainer);
+    const seatMapContainer = page.locator(theaterSessionLayout.mainContainer);
     await seatMapContainer.waitFor({ state: 'visible', timeout: 15000 });
 
-    const rowContainer = seatMapContainer.locator(theaterSessionLayout.IMAX.rowContainer).filter({
-        has: page.locator(theaterSessionLayout.IMAX.rowLabel, { hasText: new RegExp(`^${data.row}$`, 'i') })
+    const rowContainer = seatMapContainer.locator(theaterSessionLayout.rowContainer).filter({
+        has: page.locator(movieSessionDetails.rowLabel, { hasText: new RegExp(`^${data.row}$`, 'i') })
     });
 
-    const seatElements = rowContainer.locator(theaterSessionLayout.IMAX.seat);
+    const seatElements = rowContainer.locator(theaterSessionLayout.seat);
     
     for (const index of data.seats) {
         const seat = seatElements.nth(index - 1);
