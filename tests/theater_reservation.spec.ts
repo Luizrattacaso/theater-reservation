@@ -1,54 +1,48 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, type Page } from '@playwright/test';
+import { theaterLocation } from './aux_funtions/theaterLocation';
+import { theaterSessionLayout } from './aux_funtions/theaterSessionLayout';
+import { pickSession } from './aux_funtions/pickSession';
 
 const data = {
-    quantityOfTickets: 3,
-    movie: 'Coração Selvagem',
-    hourSection: '21:50',
-    row: 'E',
-    seats: [9,8,10],
-    date: '07/10',
-}
-
-const enum theaterLocation {
-    RIOMAR = 'cinemark-riomar-recife',
-    UCI = 'uci-kinoplex-shopping-recife',
-    DELUX = 'uci-kinoplex-recife-delux'
+    movie: 'Street Fighter',
+    hourSection: '20:50',
+    row: 'L',
+    seats: [15],
+    date: '18/10',
 }
 
 const movieSessionDetails = {
     city: 'recife',
-    theater: theaterLocation.DELUX
+    theater: theaterLocation.RIOMAR,
+    seatSelector: theaterSessionLayout.seat.Cinemark,
 }
 
 const baseUrl = `https://www.ingresso.com/cinema/${movieSessionDetails.theater}?city=${movieSessionDetails.city}`;
 
-async function formatMovieNameForId(movieName: string): Promise<string> {
-    return movieName
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase()
-        .trim()
-        .replace(/\s+/g, '-');
+async function closePublicity(page: Page, timeout = 3000) {
+  const button = page.getByText('Fechar publicidade');
+  try {
+    await button.waitFor({ state: 'visible', timeout });
+    await button.click({ force: true });
+  } catch {
+    console.log('Nenhuma publicidade detectada.');
+  }
 }
-
-async function pickSession(page: Page, date: string, hourSection: string, movieName: string): Promise<void> {
-    await page.getByText(`${date}`).click();
-    await page.locator(`#${await formatMovieNameForId(movieName)} a:has-text("${hourSection}")`).click();
-}
-
 
 test('Selection of movie and seats', async ({ page }) => {
     await page.goto(baseUrl, { waitUntil: 'domcontentloaded' });
+
+    await closePublicity(page);
     await pickSession(page, data.date, data.hourSection, data.movie);
 
-    const seatMapContainer = page.locator('.sc-3912aed0-4.cbUPRA');
+    const seatMapContainer = page.locator(theaterSessionLayout.mainContainer);
     await seatMapContainer.waitFor({ state: 'visible', timeout: 15000 });
 
-    const rowContainer = seatMapContainer.locator('.sc-3912aed0-2.cOVDFC').filter({
-        has: page.locator('.sc-3912aed0-10.jbunxn', { hasText: new RegExp(`^${data.row}$`, 'i') })
+    const rowContainer = seatMapContainer.locator(theaterSessionLayout.rowContainer).filter({
+        has: page.locator(theaterSessionLayout.rowLabel, { hasText: new RegExp(`^${data.row}$`, 'i') })
     });
 
-    const seatElements = rowContainer.locator('div[seatmapsize="large"]:not(:has(> div[disabled], > .disabled))');
+    const seatElements = rowContainer.locator(movieSessionDetails.seatSelector)
     
     for (const index of data.seats) {
         const seat = seatElements.nth(index - 1);
@@ -58,12 +52,24 @@ test('Selection of movie and seats', async ({ page }) => {
         }
 
         const classAttr = await seat.getAttribute('class').catch(() => '') || '';
-        const isDisabled = classAttr.includes('disabled');
+        const statusAttr = await seat.getAttribute('status').catch(() => '') || '';
+
+        const isDisabled = classAttr.includes('disabled') || statusAttr === 'Disabled';
         
-        const isOccupied = classAttr.includes('occupied') || (await seat.locator('[status="Occupied"], .occupied').count() > 0);
+        const isOccupied = 
+            classAttr.includes('occupied') || 
+            statusAttr === 'Occupied' || 
+            (await seat.locator('[status="Occupied"], .occupied').count() > 0);
 
         if (!isDisabled && !isOccupied) {
-            await seat.click();
+            const interactor = seat.locator('svg, circle, div').first();
+            
+            if (await interactor.count() > 0) {
+                await interactor.click({ force: true });
+            } else {
+                await seat.click({ force: true });
+            }
+            
             await page.waitForTimeout(3000); 
         } else {
             throw new Error(`O assento na posição ${index} da Fila ${data.row} está desativado ou já ocupado.`);
