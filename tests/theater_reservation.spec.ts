@@ -4,11 +4,11 @@ import { theaterSessionLayout } from './aux_funtions/theaterSessionLayout';
 import { pickSession } from './aux_funtions/pickSession';
 
 const data = {
-    movie: 'A Bruxa',
-    hourSection: '21:00',
-    row: 'I',
-    seats: [10],
-    date: '15/10',
+    movie: 'Street Fighter',
+    hourSection: '20:50',
+    row: 'L',
+    seats: [15],
+    date: '18/10',
 }
 
 const movieSessionDetails = {
@@ -43,7 +43,6 @@ test('Selection of movie and seats', async ({ page }) => {
     });
 
     const seatElements = rowContainer.locator(movieSessionDetails.seatSelector)
-    .filter({ hasNot: page.locator('[disabled], .disabled') });
     
     for (const index of data.seats) {
         const seat = seatElements.nth(index - 1);
