@@ -50,7 +50,7 @@ test('Selection of movie and seats', async ({ page }) => {
         const seatCell = physicalSeats.nth(seatNumber - 1);
 
         if (!(await seatCell.isVisible())) {
-            throw new Error(`O assento número ${seatNumber} na Fila ${data.row} não foi encontrado.`);
+            throw new Error(`Seat ${seatNumber} in line ${data.row} not found.`);
         }
 
         const seatStatusElement = seatCell.locator('[status]').first();
@@ -66,7 +66,7 @@ test('Selection of movie and seats', async ({ page }) => {
             
             await page.waitForTimeout(1000); 
         } else {
-            throw new Error(`O assento número ${seatNumber} da Fila ${data.row} está ocupado ou desativado.`);
+            throw new Error(`Seat ${seatNumber} in line ${data.row} is occupied or disabled.`);
         }
     }
 });
