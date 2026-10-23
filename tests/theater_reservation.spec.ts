@@ -4,17 +4,17 @@ import { theaterSessionLayout } from './aux_funtions/theaterSessionLayout';
 import { pickSession } from './aux_funtions/pickSession';
 
 const data = {
-    movie: 'Street Fighter',
-    hourSection: '20:50',
-    row: 'L',
-    seats: [15],
-    date: '18/10',
+    movie: 'Dentro Da Baleia',
+    hourSection: '16:35',
+    row: 'E',
+    seats: [8],
+    date: '28/10',
 }
 
 const movieSessionDetails = {
     city: 'recife',
-    theater: theaterLocation.RIOMAR,
-    seatSelector: theaterSessionLayout.seat.Cinemark,
+    theater: theaterLocation.DELUX,
+    seatSelector: theaterSessionLayout.seat,
 }
 
 const baseUrl = `https://www.ingresso.com/cinema/${movieSessionDetails.theater}?city=${movieSessionDetails.city}`;
@@ -25,7 +25,7 @@ async function closePublicity(page: Page, timeout = 3000) {
     await button.waitFor({ state: 'visible', timeout });
     await button.click({ force: true });
   } catch {
-    console.log('Nenhuma publicidade detectada.');
+    console.log('No ads found.');
   }
 }
 
@@ -42,37 +42,31 @@ test('Selection of movie and seats', async ({ page }) => {
         has: page.locator(theaterSessionLayout.rowLabel, { hasText: new RegExp(`^${data.row}$`, 'i') })
     });
 
-    const seatElements = rowContainer.locator(movieSessionDetails.seatSelector)
-    
-    for (const index of data.seats) {
-        const seat = seatElements.nth(index - 1);
-        
-        if (!(await seat.isVisible())) {
-            throw new Error(`O assento no índice ${index} não foi encontrado na Fila ${data.row}.`);
+    const physicalSeats = rowContainer
+        .locator(theaterSessionLayout.seat)
+        .filter({ has: page.locator('[status]') });
+
+    for (const seatNumber of data.seats) {
+        const seatCell = physicalSeats.nth(seatNumber - 1);
+
+        if (!(await seatCell.isVisible())) {
+            throw new Error(`Seat ${seatNumber} in line ${data.row} not found.`);
         }
 
-        const classAttr = await seat.getAttribute('class').catch(() => '') || '';
-        const statusAttr = await seat.getAttribute('status').catch(() => '') || '';
+        const seatStatusElement = seatCell.locator('[status]').first();
+        const statusAttr = (await seatStatusElement.getAttribute('status')) || '';
+        const classAttr = (await seatStatusElement.getAttribute('class')) || '';
 
-        const isDisabled = classAttr.includes('disabled') || statusAttr === 'Disabled';
-        
-        const isOccupied = 
-            classAttr.includes('occupied') || 
-            statusAttr === 'Occupied' || 
-            (await seat.locator('[status="Occupied"], .occupied').count() > 0);
+        const isOccupied = statusAttr.toLowerCase() === 'occupied' || classAttr.includes('occupied');
+        const isDisabled = statusAttr.toLowerCase() === 'disabled' || classAttr.includes('disabled');
 
-        if (!isDisabled && !isOccupied) {
-            const interactor = seat.locator('svg, circle, div').first();
+        if (!isOccupied && !isDisabled) {
+            const target = seatCell.locator('div[status], svg, circle').first();
+            await target.click({ force: true });
             
-            if (await interactor.count() > 0) {
-                await interactor.click({ force: true });
-            } else {
-                await seat.click({ force: true });
-            }
-            
-            await page.waitForTimeout(3000); 
+            await page.waitForTimeout(1000); 
         } else {
-            throw new Error(`O assento na posição ${index} da Fila ${data.row} está desativado ou já ocupado.`);
+            throw new Error(`Seat ${seatNumber} in line ${data.row} is occupied or disabled.`);
         }
     }
 });
