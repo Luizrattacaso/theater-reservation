@@ -52,6 +52,5 @@ The project uses a local client-server architecture:
 
 ### Example
 
-<p align="center">
-  <video src="./public/example.mp4" controls width="600"></video>
-</p>
+You can also download a simple video to see how to use the program:
+![program video](./public/example.mp4)
