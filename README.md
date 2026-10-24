@@ -50,4 +50,8 @@ The project uses a local client-server architecture:
 
   The bot will launch a visible browser window, attempt to secure the seat, and if it is currently occupied, it will close the browser and wait 4 minutes before trying again. The interface will display real-time terminal logs and status updates. When successful, the browser will remain open for 4 minutes for you to finalize the checkout. You can stop the execution at any time by clicking Stop Search.
 
-  ### Example
+### Example
+
+<p align="center">
+  <video src="./public/example.mp4" controls width="600"></video>
+</p>
