@@ -4,8 +4,8 @@ import { theaterSessionLayout } from './aux_funtions/theaterSessionLayout';
 import { pickSession } from './aux_funtions/pickSession';
 
 const data = {
-    movie: 'Dentro Da Baleia',
-    hourSection: '16:35',
+    movie: 'Rio de Sangue',
+    hourSection: '12:00',
     row: 'E',
     seats: [8],
     date: '28/10',
@@ -13,7 +13,7 @@ const data = {
 
 const movieSessionDetails = {
     city: 'recife',
-    theater: theaterLocation.DELUX,
+    theater: theaterLocation.RIOMAR,
     seatSelector: theaterSessionLayout.seat,
 }
 
