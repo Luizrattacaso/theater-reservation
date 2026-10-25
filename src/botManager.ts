@@ -24,7 +24,7 @@ async function waitWithCancel(minutes: number) {
 
 export async function startBotLoop(options: any) {
     if (botState.isRunning) return;
-    
+
     botState.isRunning = true;
     botState.status = 'Running';
     botState.logs = []; 
