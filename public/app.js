@@ -29,9 +29,12 @@ startBtn.addEventListener('click', async () => {
     const row = document.getElementById('seatRow').value;
     const seatCol = document.getElementById('seatCol').value;
     const durationHours = parseInt(document.getElementById('timeInput').value);
+    const seatsArray = seatCol.split(',')
+                              .map(s => parseInt(s.trim()))
+                              .filter(s => !isNaN(s));
 
-    if (!movie || !rawDate || !hourSection || !location || !row || !seatCol) {
-        alert('Por favor, preencha todos os campos do formulário.');
+    if (!movie || !rawDate || !hourSection || !location || !row || seatsArray.length === 0) {
+        alert('Please fill in all fields correctly.');
         return;
     }
 
@@ -46,9 +49,9 @@ startBtn.addEventListener('click', async () => {
         hourSection,
         location,
         row: row.toUpperCase(),
-        seats: [parseInt(seatCol)]
+        seats: seatsArray
     };
-
+    
     await fetch('/api/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
