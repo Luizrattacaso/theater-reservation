@@ -54,7 +54,7 @@ export async function runPlaywrightScript(data: any): Promise<boolean> {
             try {
                 await page.locator('button.button-next-footer').click({ timeout: 5000 });
             } catch {
-                console.log(`Botão de avançar bloqueado. A cadeira ${seatNumber} provavelmente está presa no sistema. Tentando de novo em 4 min.`);
+                console.log(`Button blocked. Seat(s) ${seatNumber} probably is stuck in the system. Trying again in 4 min.`);
                 return false; 
             }
             
