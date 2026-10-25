@@ -22,7 +22,6 @@ async function fetchStatus() {
 }
 
 startBtn.addEventListener('click', async () => {
-    // 1. Captura os valores digitados
     const movie = document.getElementById('movieName').value;
     const rawDate = document.getElementById('movieDate').value;
     const hourSection = document.getElementById('movieTime').value;
@@ -30,29 +29,29 @@ startBtn.addEventListener('click', async () => {
     const row = document.getElementById('seatRow').value;
     const seatCol = document.getElementById('seatCol').value;
     const durationHours = parseInt(document.getElementById('timeInput').value);
+    const seatsArray = seatCol.split(',')
+                              .map(s => parseInt(s.trim()))
+                              .filter(s => !isNaN(s));
 
-    // Validação básica
-    if (!movie || !rawDate || !hourSection || !location || !row || !seatCol) {
-        alert('Por favor, preencha todos os campos do formulário.');
+    if (!movie || !rawDate || !hourSection || !location || !row || seatsArray.length === 0) {
+        alert('Por favor, preencha todos os campos do formulário corretamente.');
         return;
     }
 
-    // 2. Converte a data de YYYY-MM-DD (padrão HTML) para DD/MM (padrão do bot)
+    // Convert a date in YYYY-MM-DD format to DD/MM
     const dateParts = rawDate.split('-');
     const formattedDate = `${dateParts[2]}/${dateParts[1]}`; // DD/MM
 
-    // 3. Monta o pacote de dados
     const payload = {
         durationHours,
         movie,
         date: formattedDate,
         hourSection,
-        location, // ex: "riomar"
+        location,
         row: row.toUpperCase(),
-        seats: [parseInt(seatCol)]
+        seats: seatsArray
     };
     
-    // 4. Envia para o servidor
     await fetch('/api/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
