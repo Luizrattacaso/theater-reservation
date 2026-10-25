@@ -34,7 +34,7 @@ startBtn.addEventListener('click', async () => {
                               .filter(s => !isNaN(s));
 
     if (!movie || !rawDate || !hourSection || !location || !row || seatsArray.length === 0) {
-        alert('Por favor, preencha todos os campos do formulário corretamente.');
+        alert('Please fill in all fields correctly.');
         return;
     }
 
